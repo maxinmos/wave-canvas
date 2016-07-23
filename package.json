@@ -1,0 +1,25 @@
+{
+  "name": "wave-canvas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caojs/wave-canvas.git"
+  },
+  "keywords": [
+    "canvas"
+  ],
+  "author": "caojs <ctdaibk09@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/caojs/wave-canvas/issues"
+  },
+  "homepage": "https://github.com/caojs/wave-canvas#readme",
+  "dependencies": {
+    "path-to-regexp": "1.5.3"
+  }
+}
