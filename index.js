@@ -3,8 +3,8 @@ var fs = require('fs');
 var path = require('path');
 
 var server = http.createServer(function (req, res) {
-  if (req.url === '/script.js') {
-    fs.createReadStream(path.resolve(__dirname, './script.js'))
+  if (req.url === '/bundle.js') {
+    fs.createReadStream(path.resolve(__dirname, './dest/bundle.js'))
       .pipe(res);
   }
   else {
