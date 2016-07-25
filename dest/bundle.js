@@ -44,60 +44,63 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var vec2d = __webpack_require__(1);
+	var vector = __webpack_require__(3);
 	var engine = __webpack_require__(2);
 
-	var createVec2d = vec2d.createVec2d;
-	var toRad = vec2d.toRad;
 	var load = engine.load;
 	var getAnimationFrame = engine.getAnimationFrame;
+	var vec2d = vector.vec2d;
+	var toRad = vector.toRad;
 
-	var screenWidth;
-	var screenHeight;
-	var canvas;
-	var ctx;
-	var angle = 0;
-	var radius = 20;
-	var _ = {};
-
-	function gLength(width, padding, height, x) {
-	  var dx = x < padding ?
-	    x : width - x;
-	  return dx >= padding ?
-	    height : height / padding * dx;
-	}
-
-	function incAngle(angle, alpha) {
+	function increaseAngle(angle, alpha) {
 	  return (angle + alpha) % 360;
 	}
 
-	function wave(ctx, width, padding) {
+	function wave(posX, posY, width, padding) {
 	  var angle = 0;
 
-	  return function draw(height, dn, dSpeed) {
-	    var waveLength = width;
-	    var innerAngle = angle;
-	    var vector = function() {
-	      return createVec2d(
-	        gLength(width, padding, height, waveLength),
-	        toRad(innerAngle));
-	    };
-	    var point = vector();
+	  var calculateWaveHeight = function(waveHeight, x) {
+	    var dx = x < padding ?
+	      x :
+	      width - x;
 
-	    angle = incAngle(angle, dSpeed);
+	    return dx >= padding ?
+	     waveHeight :
+	     waveHeight / padding * dx;
+	  };
 
+	  var vec = function (waveHeight, x, angle) {
+	    return vec2d(
+	      calculateWaveHeight(waveHeight, x),
+	      toRad(angle));
+	  };
+
+	  return function draw(ctx, waveHeight, dNumber, dSpeed, style) {
+	    var x = width;
+	    var iAngle = angle;
+	    var point = vec(waveHeight, x, iAngle);
+
+	    angle = increaseAngle(angle, dSpeed);
+
+	    ctx.lineCap = 'round';
+	    ctx.lineJoin = 'round';
+	    ctx.strokeStyle = style.strokeStyle;
+	    ctx.lineWidth = style.lineWidth;
+	    ctx.save();
+	    ctx.translate(posX, posY);
 	    ctx.beginPath();
-	    ctx.moveTo(waveLength, point.y);
+	    ctx.moveTo(x, point.y);
 
-	    while (waveLength > 0) {
-	      innerAngle = incAngle(innerAngle, dn);
-	      waveLength -= 1;
-	      point = vector();
-	      ctx.lineTo(waveLength, point.y);
+	    while (x > 0) {
+	      x -= 1;
+	      iAngle = increaseAngle(iAngle, dNumber);
+	      point = vec(waveHeight, x, iAngle);
+	      ctx.lineTo(x, point.y);
 	    }
 
 	    ctx.stroke();
 	    ctx.closePath();
+	    ctx.restore();
 	  }
 	}
 
@@ -113,30 +116,32 @@
 	}
 
 	load(function () {
-	  canvas = document.getElementById('canvas');
-	  ctx = canvas.getContext('2d');
-	  screenWidth = canvas.clientWidth;
-	  screenHeight = canvas.clientHeight;
+	  var canvas = document.getElementById('canvas');
+	  var ctx = canvas.getContext('2d');
+	  var screenWidth = canvas.clientWidth;
+	  var screenHeight = canvas.clientHeight;
 
-	  var wave1 = wave(ctx, screenWidth, screenWidth / 4);
-	  var wave2 = wave(ctx, screenWidth, screenWidth / 4);
+	  var wave1 = wave(0, screenHeight / 2, screenWidth, screenWidth / 4);
+	  var wave2 = wave(0, screenHeight / 2, screenWidth, screenWidth / 2);
+
 	  var sHeight = swing(0, 25, 0.2);
-	  var sN = swing(2, 5, 0.01);
-	  var sSpeed = swing(6, 10, 0.02);
+	  var sNumber = swing(2, 5, 0.01);
+	  var sSpeed = swing(10, 20, 0.03);
 
 	  (function loop() {
 	    getAnimationFrame(function () {
-	      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-	      ctx.fillRect(0, 0, screenWidth, screenHeight);
-	      ctx.save();
-	      ctx.translate(0, screenHeight / 2);
-	      ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-	      wave1(15, 1.5, 5);
-	      ctx.restore();
-	      ctx.save();
-	      ctx.translate(0, screenHeight / 2);
-	      wave2(sHeight(), sN(), sSpeed());
-	      ctx.restore();
+	      ctx.clearRect(0, 0, screenWidth, screenHeight);
+
+	      wave1(ctx, 15, 1.5, 5, {
+	        strokeStyle: 'rgba(0, 0, 0, 0.2)',
+	        lineWidth: 1
+	      });
+
+	      wave2(ctx, sHeight(), sNumber(), sSpeed(), {
+	        strokeStyle: 'rgba(0, 0, 0, 0.7)',
+	        lineWidth: 3
+	      });
+
 	      loop();
 	    });
 	  })();
@@ -144,46 +149,7 @@
 
 
 /***/ },
-/* 1 */
-/***/ function(module, exports) {
-
-	function toRad(r) {
-	  return Math.PI * r / 180;
-	}
-
-	function distance({x, y}, {x: x1, y: y1}) {
-	  return Math.sqrt(
-	    Math.pow(x1 - x, 2) + Math.pow(y1 - y, 2)
-	  );
-	}
-
-	function length({x, y}) {
-	  return distance({x, y}, {x: 0, y: 0});
-	}
-
-	function createVec2d(length, rad) {
-	  return {
-	    y: Math.sin(rad) * length,
-	    x: Math.cos(rad) * length,
-	    angle: rad
-	  };
-	}
-
-	function vec2d(x = 1, y = 0) {
-	  return {
-	    x: x,
-	    y: y,
-	    angle: 0
-	  };
-	}
-
-	module.exports = {
-	  toRad: toRad,
-	  createVec2d: createVec2d
-	};
-
-
-/***/ },
+/* 1 */,
 /* 2 */
 /***/ function(module, exports) {
 
@@ -204,6 +170,28 @@
 	module.exports = {
 	  load: load,
 	  getAnimationFrame: getAnimationFrame
+	};
+
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	function toRad(r) {
+	  return Math.PI * r / 180;
+	}
+
+	function vec2d(length, rad) {
+	  return {
+	    y: Math.sin(rad) * length,
+	    x: Math.cos(rad) * length,
+	    angle: rad
+	  };
+	}
+
+	module.exports = {
+	  toRad: toRad,
+	  vec2d: vec2d
 	};
 
 
